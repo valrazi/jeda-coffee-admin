@@ -46,8 +46,22 @@ class DashboardController extends Controller
         ->sum('total_price');
 
     $totalToday = (clone $ordersQuery)
-        ->whereDate('created_at', Carbon::today()->subHours(7))
+        ->whereDate('created_at', Carbon::today())
         ->sum('total_price');
+
+    $totalTransferToday = (clone $ordersQuery)
+        ->whereDate('created_at', Carbon::today())
+        ->where('paid_at_cashier', 0)
+        ->count();
+
+     $totalCashToday = (clone $ordersQuery)
+        ->whereDate('created_at', Carbon::today())
+        ->where('paid_at_cashier', 1)
+        ->count();
+
+    $totalTransactionToday = (clone $ordersQuery)
+        ->whereDate('created_at', Carbon::today())
+        ->count();
 
     return Inertia::render('Dashboard', [
         'transactionPerYear' => $transactionPerYear,
@@ -55,6 +69,9 @@ class DashboardController extends Controller
         'totalThisYear' => $totalThisYear,
         'totalThisMonth' => $totalThisMonth,
         'totalToday' => $totalToday,
+        'totalTransferToday' => $totalTransferToday,
+        'totalCashToday' => $totalCashToday,
+        'totalTransactionToday' => $totalTransactionToday
     ]);
 }
 

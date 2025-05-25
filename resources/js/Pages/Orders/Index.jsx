@@ -18,7 +18,7 @@ const OrderIndex = ({ auth }) => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [newStatus, setNewStatus] = useState("");
 
-    console.log(orders.data);
+    console.log(orders);
     // Search orders
     const onSearch = (value) => {
         setSearch(value);
@@ -77,9 +77,32 @@ const OrderIndex = ({ auth }) => {
         {
             title: "Customer",
             key: "customer_name",
-            render: (_, record) => record.customer.full_name && record.customer.phone_number ? `${record.customer.full_name} (+62${record.customer.phone_number})` : 'N/A',
+            render: (_, record) => (
+                <div>
+                    {
+                        (record.customer.full_name && record.customer.phone_number) ? (
+                            <span style={{ textAlign: 'center' }}>
+                                {
+                                    record.customer.full_name
+                                }
+                                <br></br>
+                                {
+                                    `+62${record.customer.phone_number}`
+                                }
+                            </span>
+                        ) : 'N/A'
+                    }
+                </div>
+            ),
         },
         { title: "Total Price", dataIndex: "total_price", key: "total_price", render: (text) => `Rp ${text}` },
+        {
+            title: "Payment Method",
+            dataIndex: "paid_at_cashier",
+            key: "paid_at_cashier",
+            render: (text) =>
+                <span>{text ? 'PEMBAYARAN CASH' : 'PEMBAYARAN TRANSFER'}</span>
+        },
         {
             title: "Status",
             dataIndex: "order_status",
@@ -136,7 +159,12 @@ const OrderIndex = ({ auth }) => {
                     </Space>
                 </div>
 
+                <div className="flex justify-end items-center">
+                    <h1>Total Orders: {orders.total}</h1>
+                </div>
+
                 <Table columns={columns} dataSource={orders.data} rowKey="id" pagination={{ current: orders.current_page, total: orders.total, pageSize: orders.per_page, onChange: (page) => router.get("/orders", { page, search, status }, { preserveState: true }) }} />
+
             </div>
 
             {/* Order Details Modal */}
@@ -146,6 +174,9 @@ const OrderIndex = ({ auth }) => {
                     <p><strong>Customer:</strong> {`${selectedOrder.customer.full_name} (+62${selectedOrder.customer.phone_number})`}</p>
                     <p><strong>Total Price:</strong> Rp {selectedOrder.total_price}</p>
                     <p ><strong>Status:</strong> {selectedOrder.order_status}</p>
+
+                    <p ><strong>Payment Method:</strong> {selectedOrder.paid_at_cashier ? 'PEMBAYARAN CASH' : 'PEMBAYARAN TRANSFER'}</p>
+
                     <p ><strong>Table Number:</strong> {selectedOrder.table_number}</p>
                     {
                         selectedOrder.paid_at_cashier ? (

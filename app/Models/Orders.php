@@ -26,7 +26,8 @@ class Orders extends Model
         'customer_id',
         'total_price',
         'status',
-        'order_status'
+        'order_status',
+        'paid_at_cashier'
     ];
 
     public function customer()

@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 
-export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalToday, transactionPerMonth, transactionPerYear }) {
+export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalToday, transactionPerMonth, transactionPerYear, totalTransferToday, totalCashToday,  totalTransactionToday}) {
     const [range, setRange] = useState([dayjs().subtract(7, 'day'),
         dayjs()]);
     const [loading, setLoading] = useState(false);
@@ -91,6 +91,25 @@ export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalTo
                                     </Card>
                                 </Col>
                             </Row>
+                            <Row gutter={16}>
+                                <Col span={8}>
+                                    <Card title="Total Transfer Today" bordered={false} className="!shadow !rounded-xl">
+                                        {totalTransferToday.toLocaleString()}
+                                    </Card>
+                                </Col>
+                                <Col span={8}>
+                                    <Card title="Total Cash Today" bordered={false} className="!shadow !rounded-xl">
+                                        {totalCashToday.toLocaleString()}
+                                    </Card>
+                                </Col>
+                                <Col span={8}>
+                                    <Card title="Total Transaction Today" bordered={false} className="!shadow !rounded-xl">
+                                        {totalTransactionToday.toLocaleString()}
+                                    </Card>
+                                </Col>
+                            </Row>
+
+
 
 
 
