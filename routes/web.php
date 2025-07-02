@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Response;
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
+
 
 Route::get('/', function () {
     // return Inertia::render('Welcome', [
@@ -29,41 +31,49 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-    Route::get('/dashboard/export-orders', function () {
-        $orders = Orders::with('customer')->orderBy('created_at', 'desc')->get();
+Route::get('/dashboard/export-orders', function (Request $request) {
+    $query = Orders::with('customer')->orderBy('created_at', 'desc');
 
-        $filename = "orders-export-" . now()->format('Y-m-d') . ".csv";
+    if ($request->filled('startAt')) {
+        $query->whereDate('created_at', '>=', $request->startAt);
+    }
 
-        $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
-        ];
+    if ($request->filled('endAt')) {
+        $query->whereDate('created_at', '<=', $request->endAt);
+    }
 
-        $columns = ['ID', 'Customer Name', 'Total Price', 'Created At'];
+    $orders = $query->get();
 
-        $callback = function () use ($orders, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+    $filename = "orders-export-" . now()->format('Y-m-d') . ".csv";
 
-            foreach ($orders as $order) {
-                fputcsv($file, [
-                    $order->id,
-                    $order->customer->full_name,
-                    $order->total_price,
-                    $order->created_at,
-                ]);
-            }
+    $headers = [
+        "Content-type"        => "text/csv",
+        "Content-Disposition" => "attachment; filename=$filename",
+        "Pragma"              => "no-cache",
+        "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+        "Expires"             => "0"
+    ];
 
-            fclose($file);
-        };
+    $columns = ['ID', 'Customer Name', 'Total Price', 'Created At'];
 
-        return Response::stream($callback, 200, $headers);
-    })
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard.export-orders');
+    $callback = function () use ($orders, $columns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
+
+        foreach ($orders as $order) {
+            fputcsv($file, [
+                $order->id,
+                $order->customer->full_name,
+                $order->total_price,
+                $order->created_at,
+            ]);
+        }
+
+        fclose($file);
+    };
+
+    return Response::stream($callback, 200, $headers);
+})->middleware(['auth', 'verified'])->name('dashboard.export-orders');
 Route::middleware('auth')->group(function () {
 
     Route::resource('/permissions', PermissionController::class);
@@ -78,4 +88,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

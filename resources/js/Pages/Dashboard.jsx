@@ -9,9 +9,9 @@ import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 
-export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalToday, transactionPerMonth, transactionPerYear, totalTransferToday, totalCashToday,  totalTransactionToday}) {
+export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalToday, transactionPerMonth, transactionPerYear, totalTransferToday, totalCashToday, totalTransactionToday, topOrderItems }) {
     const [range, setRange] = useState([dayjs().subtract(7, 'day'),
-        dayjs()]);
+    dayjs()]);
     const [loading, setLoading] = useState(false);
     const fetchData = async (dates) => {
         setLoading(true);
@@ -63,15 +63,23 @@ export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalTo
                                         setRange(val);
                                         if (val && val[0] && val[1]) {
                                             fetchData(val);
-                                        }else {
+                                        } else {
                                             resetData()
                                         }
                                     }}
                                     format="YYYY-MM-DD"
                                 />
                                 <Button
-                                    onClick={() => window.open(route('dashboard.export-orders'), '_blank')}
-                                    icon={<DownloadOutlined />}>Export Data</Button>
+                                    onClick={() => {
+                                        const startAt = range[0].format('YYYY-MM-DD'); // replace with state or dynamic value
+                                        const endAt = range[1].format('YYYY-MM-DD'); // replace with state or dynamic value
+                                        const url = route('dashboard.export-orders') + `?startAt=${startAt}&endAt=${endAt}`;
+                                        window.open(url, '_blank');
+                                    }}
+                                    icon={<DownloadOutlined />}
+                                >
+                                    Export Data
+                                </Button>
                             </Row>
                             {/* Total Transaction Cards */}
                             <Row gutter={16}>
@@ -123,15 +131,15 @@ export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalTo
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis
                                                 dataKey="month"
-                                                // If your backend send month as number (1, 2, 3...)
                                                 tickFormatter={(month) =>
                                                     new Date(0, month - 1).toLocaleString('en-US', { month: 'long' })
                                                 }
                                             />
-                                            <YAxis domain={[0, Math.max(...transactionPerMonth.map(item => item.total)) + 50000]} />
+                                            <YAxis />
                                             <Tooltip />
                                             <Legend />
-                                            <Line type="monotone" dataKey="total" stroke="#82ca9d" />
+                                            <Line type="monotone" dataKey="total" name="Taxed Total" stroke="#82ca9d" />
+                                            <Line type="monotone" dataKey="total_untaxed" name="Untaxed Total" stroke="#8884d8" />
                                         </LineChart>
                                     </ResponsiveContainer>
 
@@ -146,11 +154,25 @@ export default function Dashboard({ auth, totalThisYear, totalThisMonth, totalTo
                                             <YAxis />
                                             <Tooltip />
                                             <Legend />
-                                            <Bar dataKey="total" fill="#8884d8" />
+                                            <Bar dataKey="total" name="Taxed Total" fill="#82ca9d" />
+                                            <Bar dataKey="total_untaxed" name="Untaxed Total" fill="#8884d8" />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
 
+                                <div className="p-4 bg-white shadow rounded">
+                                    <h2 className="text-lg mb-2">Top 3 Products</h2>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <BarChart data={topOrderItems}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Legend />
+                                            <Bar dataKey="total_quantity" name="Total Quantity" fill="#8884d8" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
 
                         </div>
